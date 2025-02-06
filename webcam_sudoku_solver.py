@@ -444,6 +444,9 @@ def resize(digits):
 			w = 20
 			h = int(round(h * factor))
 
+		if w <= 0 or h <= 0:
+			continue
+
 		digits[index] = cv.resize(digit, (w, h), interpolation=cv.INTER_AREA)
 
 
