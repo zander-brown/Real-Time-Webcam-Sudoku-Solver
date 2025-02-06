@@ -5,7 +5,7 @@
 # Real-Time-Webcam-Sudoku-Solver
 
 ## Table of contents
-* [What is Real Time Webcam Sudoku Solver?](#What-is-Real-Time-Webcam-Sudoku-Solver?)
+* [What is Real Time Webcam Sudoku Solver?](#What-is-al-Time-Webcam-Sudoku-Solver?)
 * [Code requirements](#Code-requirements)
 * [Installation](#Installation)
 * [Usage](#Usage)
@@ -16,7 +16,7 @@
 * [License](#License)
 
 ## What is Real Time Webcam Sudoku Solver?
-This is a program written in Python that connects with your webcam and tries to solve a popular puzzle called [sudoku](https://en.wikipedia.org/wiki/Sudoku). Of course I'm not the first person which wrote such a program. 
+This is a program written in Python that captures your screen and tries to solve a popular puzzle called [sudoku](https://en.wikipedia.org/wiki/Sudoku). Of course I'm not the first person which wrote such a program. 
 I was inspired by [this project](https://github.com/murtazahassan/OpenCV-Sudoku-Solver) that 
 I came across thanks to [this YouTube video](https://youtu.be/qOXDoYUgNlU).
 I recognized that this type of project has a great potential and decided to write my own version.
@@ -42,16 +42,16 @@ Already trained one is saved in Models folder.
 Using Terminal/Command Prompt navigate to the correct directory and run main_file.py using the following command: python main_file.py
 
 ## Usage
-After running main_file.py you should see a window that shows live feed from your webcam.
-Now place a sudoku in the webcam's field of view.
+After running main_file.py you should see a window that shows a live capture of your screen.
+Now place a sudoku on your screen.
 And that's all. In the window should appear a solution.
-If the solution doesn't appear, or the program doesn't even locate the sudoku, try to move it closer/further to the webcam. If it doesn't help, you may need to improve the lighting quality.
+If the solution doesn't appear, or the program doesn't even locate the sudoku, try to move it closer/further to the screen. If it doesn't help, you may need to improve the lighting quality.
 
 ## How does it work?
 Short explanation - algorithm:
-* read a frame from a webcam
-* convert that frame into grayscale
-* binarize that frame
+* capture a screenshot of your screen
+* convert that screenshot into grayscale
+* binarize that screenshot
 * find all external contours
 * get the biggest quadrangle from that contours
 * apply warp transform (bird eye view) on the biggest quadrangle
@@ -67,7 +67,7 @@ Short explanation - algorithm:
 	* if the digits are part of the previous solution then we don't need to solve the sudoku again - break the loop
 	* try to solve the sudoku
 	* if solved correctly break the loop
-* return a copy of the frame (with a solution if any were found)
+* return a copy of the screenshot (with a solution if any were found)
 
 Precise explanation - code analysis:  
 
@@ -84,61 +84,40 @@ import tensorflow as tf
 ```
 
 Then main function starts.  
-First task of the function is to prepare a CNN model and a webcam.
+First task of the function is to prepare a CNN model and a screen capture.
 ```python
 model = tf.keras.models.load_model('Models/handwritten_cnn.h5')
 
-webcam_width, webcam_height = 1920, 1080
-webcam = cv.VideoCapture(0)
-webcam.set(cv.CAP_PROP_FRAME_WIDTH, webcam_width)
-webcam.set(cv.CAP_PROP_FRAME_HEIGHT, webcam_height)
+# create the core of the program
+webcam_sudoku_solver = WebcamSudokuSolver(model)
 ```
 
 Now main loop of the program starts.  
 We'll use there a object of WebcamSudokuSolver class - the core of the program.  
 ```python
-# create the core of the program
-webcam_sudoku_solver = WebcamSudokuSolver(model)
-```
-
-At the beginning of each iteration of main loop a frame is read from a webcam.  
-
-![pure_frame](screenshots/pure_frame.png)  
-
-
-Then that frame is passed as an argument to the object of WebcamSudokuSolver class using solve function.  
-The function returns a copy of that frame (with a drawn solution if any has been found).  
-How does solve function convert a webcam frame into a frame with solution? I'll explain it in a moment.
-But now let's see what happens with that returned frame.  
-That frame is just displayed.
-We also check if a user has pressed a key (if so, the program is closed).
-
-```python
 print('Logs:')
-while webcam.isOpened():
-	successful_frame_read, frame = webcam.read()
-
-	if not successful_frame_read:
-		break
+while True:
+	# capture screenshot
+	screenshot = pyautogui.screenshot()
+	frame = cv.cvtColor(np.array(screenshot), cv.COLOR_RGB2BGR)
 
 	# run the core of the program
 	output_frame = webcam_sudoku_solver.solve(frame)
 
 	# output results
-	cv.imshow('Webcam Sudoku Solver', output_frame)
+	cv.imshow('Screen Sudoku Solver', output_frame)
 
 	# check if a user has pressed a key, if so, close the program
 	if cv.waitKey(1) >= 0:
 		break
 
 cv.destroyAllWindows()
-webcam.release()
 ```
 
 If there are no errors, the following information will be displayed at the very end of the program:  
 "Code is done, so everything works fine!".  
 
-But how does solve function convert a webcam frame into a frame with solution?
+But how does solve function convert a screen capture into a frame with solution?
 
 To answer this question we have to move to webcam_sudoku_solver.py file. 
 
